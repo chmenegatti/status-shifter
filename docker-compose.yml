@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: status-shifter
+    build: .
+    ports:
+      - "9000:9000"
+    environment:
+      NODE_ENV: production
+      PORT: 9000
+      ETCD_ENDPOINT: http://nemesis-etcd:2379
+      ETCD_API_VERSION: v3
+    networks:
+      - nemesis
+    restart: unless-stopped
+
+networks:
+  nemesis:
+    external: true
+    name: nemesis-starter_nemesis

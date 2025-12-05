@@ -20,6 +20,8 @@ export function StatusUpdateCard() {
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'loading' | 'connected' | 'error'>('idle');
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const connectInFlight = useRef<AbortController | null>(null);
+  const [remoteStatus, setRemoteStatus] = useState<'unknown' | 'sent' | 'pending' | 'other' | 'missing'>('unknown');
+  const statusInFlight = useRef<AbortController | null>(null);
 
   // Attempt connection automatically when datacenter changes
   useEffect(() => {
@@ -79,6 +81,48 @@ export function StatusUpdateCard() {
 
   const isValid = datacenter && UUID_REGEX.test(aggregateId);
 
+  // Fetch current outbox status when datacenter + valid UUID change
+  useEffect(() => {
+    if (!datacenter || !UUID_REGEX.test(aggregateId)) {
+      setRemoteStatus('unknown');
+      return;
+    }
+
+    statusInFlight.current?.abort();
+    const abortController = new AbortController();
+    statusInFlight.current = abortController;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/status/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ datacenter, aggregateId }),
+          signal: abortController.signal,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Falha ao consultar status');
+        const status: string | null = data?.status ?? null;
+        if (!status) {
+          setRemoteStatus('missing');
+          return;
+        }
+        const norm = status.toLowerCase();
+        if (norm === 'sent') setRemoteStatus('sent');
+        else if (norm === 'pending') setRemoteStatus('pending');
+        else setRemoteStatus('other');
+      } catch (error) {
+        if ((error as any)?.name === 'AbortError') return;
+        setRemoteStatus('unknown');
+        toast({
+          title: 'Erro ao consultar status',
+          description: (error as Error).message,
+          variant: 'destructive',
+        });
+      }
+    })();
+  }, [aggregateId, datacenter, toast]);
+
   const handleUpdate = async () => {
     if (!isValid) return;
 
@@ -132,6 +176,7 @@ export function StatusUpdateCard() {
         description: `de Sent para Pending em ${aggregateId}`,
       });
 
+      setRemoteStatus('pending');
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 3000);
     } catch (error) {
@@ -205,12 +250,26 @@ export function StatusUpdateCard() {
           <div className="flex items-center justify-center gap-4 py-4 px-6 rounded-xl bg-muted/50">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Status:</span>
-              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-600 font-medium text-sm">
+              <span
+                className={cn(
+                  "px-3 py-1 rounded-full font-semibold text-sm transition-all",
+                  remoteStatus === 'sent'
+                    ? "bg-amber-200/50 text-orange-300 shadow-[0_0_18px_rgba(255,180,80,0.95)] border border-amber-200 saturate-150"
+                    : "bg-amber-500/20 text-amber-600"
+                )}
+              >
                 Sent
               </span>
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground" />
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 font-medium text-sm">
+            <span
+              className={cn(
+                "px-3 py-1 rounded-full font-medium text-sm transition-all",
+                remoteStatus === 'pending'
+                  ? "bg-emerald-500/30 text-emerald-700 shadow-glow"
+                  : "bg-emerald-500/20 text-emerald-600"
+              )}
+            >
               Pending
             </span>
           </div>

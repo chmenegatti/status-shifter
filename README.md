@@ -1,73 +1,68 @@
-# Status Shifter (Next.js)
+# Status Shifter
 
-## Project info
+Aplicação Next.js (App Router) que lê configurações de banco no etcd e atualiza o status do outbox. Este guia mostra como preparar o etcd, construir a imagem e subir tudo via Docker Compose na mesma rede do etcd.
 
-**URL**: https://lovable.dev/projects/74f571ff-1773-40b2-aed1-2bf9a9c90708
+## Pré-requisitos
+- Docker e Docker Compose instalados.
+- Container do etcd já rodando.
+- Rede Docker externa compartilhada com o etcd (ex.: `nemesis-starter_nemesis`).
+- Warp instalado (Cloudflare Warp). Durante o **primeiro build**, se estiver lento, desconecte (`warp-cli disconnect`). Para **usar** a aplicação, conecte o Warp; para acessar `tece` ou `tesp2`, conecte também às respectivas VPNs.
 
-## How can I edit this code?
+## Configuração do etcd
+As chaves abaixo precisam existir e conter as credenciais corretas do banco (JSON):
+- `/nemesis-api/env-tece1`
+- `/nemesis-api/env-tesp2`
+- `/nemesis-api/env-tesp3`
+- `/nemesis-api/env-tesp5`
+- `/nemesis-api/env-tesp6`
+- `/nemesis-api/env-tesp7`
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/74f571ff-1773-40b2-aed1-2bf9a9c90708) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+Formato sugerido para cada chave (ajuste os valores reais):
+```json
+{
+  "host": "db-host",
+  "port": 3306,
+  "user": "db-user",
+  "password": "db-pass",
+  "database": "db-name"
+}
 ```
 
-**Edit a file directly in GitHub**
+Exemplo para gravar (etcd v3 gateway HTTP — converta a chave para base64):
+```sh
+curl -X POST "http://<etcd-host>:2379/v3/kv/put" \
+  -d '{"key":"L25lbWVzaXMtYXBpL2Vudi10ZXNlYzE=","value":"{\\"host\\":\\"db-host\\",\\"port\\":3306,\\"user\\":\\"db-user\\",\\"password\\":\\"db-pass\\",\\"database\\":\\"db-name\\"}"}'
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Subindo com Docker Compose
+O `docker-compose.yml` já está configurado para usar a rede externa `nemesis-starter_nemesis` e expor a aplicação em `9000`.
 
-**Use GitHub Codespaces**
+1) Confirme que a rede existe:
+```sh
+docker network ls | grep nemesis-starter_nemesis
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+2) Se for o primeiro build e estiver lento, desconecte o Warp:
+```sh
+warp-cli disconnect
+```
 
-## What technologies are used for this project?
+3) Suba a aplicação (build + run):
+```sh
+docker compose up -d
+```
 
-This project is built with:
+4) Depois do build, reconecte o Warp e, se for usar `tece` ou `tesp2`, conecte às respectivas VPNs.
 
-- Next.js (App Router)
-- TypeScript
-- React
-- shadcn-ui + Radix primitives
-- Tailwind CSS
+5) Acesse: http://localhost:9000
 
-## How can I deploy this project?
+## Variáveis de ambiente principais
+O Compose já define valores padrão; sobrescreva se precisar:
+- `ETCD_ENDPOINT`: ex. `http://nemesis-etcd:2379`
+- `ETCD_API_VERSION`: `v3` (padrão)
+- `PORT`: `9000`
 
-For a custom deployment, run `npm run build` and deploy the output with your preferred Next.js host (Vercel recommended). If using Lovable, open the [project](https://lovable.dev/projects/74f571ff-1773-40b2-aed1-2bf9a9c90708) and click Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Dicas rápidas
+- Logs: `docker compose logs -f`
+- Reiniciar serviço: `docker compose restart app`
+- Parar tudo: `docker compose down`

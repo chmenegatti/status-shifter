@@ -18,7 +18,7 @@ export default function Page() {
               </div>
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-accent blur-lg opacity-50" />
             </div>
-            <span className="text-xl font-bold gradient-text">StatusHub</span>
+            <span className="text-xl font-bold gradient-text">Outbox</span>
           </div>
 
           <ThemeSwitcher />
@@ -31,11 +31,11 @@ export default function Page() {
           {/* Hero Section */}
           <div className="text-center space-y-4 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold">
-              Gerenciador de{' '}
-              <span className="gradient-text">Status</span>
+              Reprocessar via{' '}
+              <span className="gradient-text">Outbox</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto">
-              Atualize rapidamente o status de registros nos seus datacenters com apenas alguns cliques.
+              Reprocessar registros alterando seu status de <span className="font-mono font-medium">Sent</span> para <span className="font-mono font-medium">Pending</span>.
             </p>
           </div>
 
