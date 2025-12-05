@@ -1,3 +1,5 @@
+"use client";
+
 import { Sun, Moon, Palette } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -27,8 +29,8 @@ export function ThemeSwitcher() {
             onClick={() => setMode(id)}
             className={cn(
               "relative p-2 rounded-full transition-all duration-300",
-              mode === id 
-                ? "bg-primary text-primary-foreground shadow-glow" 
+              mode === id
+                ? "bg-primary text-primary-foreground shadow-glow"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             )}
             title={label}
@@ -42,8 +44,8 @@ export function ThemeSwitcher() {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2 glass">
-              <div 
-                className="w-4 h-4 rounded-full border border-border" 
+              <div
+                className="w-4 h-4 rounded-full border border-border"
                 style={{ background: `linear-gradient(135deg, ${customPrimary}, ${customAccent})` }}
               />
               Cores
@@ -68,7 +70,7 @@ export function ThemeSwitcher() {
                   </code>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="accent-color" className="text-sm font-medium">
                   Cor de Destaque

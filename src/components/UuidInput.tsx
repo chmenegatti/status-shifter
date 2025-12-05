@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Hash, Check, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -13,7 +15,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 
 export function UuidInput({ value, onChange }: UuidInputProps) {
   const [touched, setTouched] = useState(false);
-  
+
   const isValid = UUID_REGEX.test(value);
   const showValidation = touched && value.length > 0;
 
@@ -34,8 +36,8 @@ export function UuidInput({ value, onChange }: UuidInputProps) {
           className={cn(
             "glass border-border/50 h-12 text-base font-mono pr-10 transition-all",
             "focus:ring-2 focus:ring-primary/50",
-            showValidation && (isValid 
-              ? "border-emerald-500/50 focus:ring-emerald-500/30" 
+            showValidation && (isValid
+              ? "border-emerald-500/50 focus:ring-emerald-500/30"
               : "border-destructive/50 focus:ring-destructive/30"
             )
           )}

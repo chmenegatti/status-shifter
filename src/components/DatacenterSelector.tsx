@@ -1,3 +1,5 @@
+"use client";
+
 import { Server } from 'lucide-react';
 import {
   Select,
@@ -30,7 +32,7 @@ export function DatacenterSelector({ value, onChange }: DatacenterSelectorProps)
         Datacenter
       </Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger 
+        <SelectTrigger
           id="datacenter"
           className="w-full glass border-border/50 h-12 text-base focus:ring-2 focus:ring-primary/50"
         >
@@ -38,8 +40,8 @@ export function DatacenterSelector({ value, onChange }: DatacenterSelectorProps)
         </SelectTrigger>
         <SelectContent className="glass border-border/50 z-50 bg-popover">
           {DATACENTERS.map((dc) => (
-            <SelectItem 
-              key={dc.id} 
+            <SelectItem
+              key={dc.id}
               value={dc.id}
               className="cursor-pointer focus:bg-primary/10"
             >

@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Status Shifter (Next.js)
 
 ## Project info
 
@@ -54,15 +54,15 @@ npm run dev
 
 This project is built with:
 
-- Vite
+- Next.js (App Router)
 - TypeScript
 - React
-- shadcn-ui
+- shadcn-ui + Radix primitives
 - Tailwind CSS
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/74f571ff-1773-40b2-aed1-2bf9a9c90708) and click on Share -> Publish.
+For a custom deployment, run `npm run build` and deploy the output with your preferred Next.js host (Vercel recommended). If using Lovable, open the [project](https://lovable.dev/projects/74f571ff-1773-40b2-aed1-2bf9a9c90708) and click Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
 
