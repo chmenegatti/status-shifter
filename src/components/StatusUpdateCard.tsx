@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
-import { RefreshCw, ArrowRight, CheckCircle2, Database, Loader2, AlertTriangle } from 'lucide-react';
+import { RefreshCw, ArrowRight, CheckCircle2, Database, Loader2, AlertTriangle, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DatacenterSelector } from './DatacenterSelector';
@@ -21,6 +21,8 @@ export function StatusUpdateCard() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const connectInFlight = useRef<AbortController | null>(null);
   const [remoteStatus, setRemoteStatus] = useState<'unknown' | 'sent' | 'pending' | 'other' | 'missing'>('unknown');
+  const [transaction, setTransaction] = useState<string | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
   const statusInFlight = useRef<AbortController | null>(null);
 
   // Attempt connection automatically when datacenter changes
@@ -85,12 +87,15 @@ export function StatusUpdateCard() {
   useEffect(() => {
     if (!datacenter || !UUID_REGEX.test(aggregateId)) {
       setRemoteStatus('unknown');
+      setTransaction(null);
+      setStatusLoading(false);
       return;
     }
 
     statusInFlight.current?.abort();
     const abortController = new AbortController();
     statusInFlight.current = abortController;
+    setStatusLoading(true);
 
     (async () => {
       try {
@@ -103,22 +108,28 @@ export function StatusUpdateCard() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Falha ao consultar status');
         const status: string | null = data?.status ?? null;
+        const tx: string | null = data?.transaction ?? null;
         if (!status) {
           setRemoteStatus('missing');
+          setTransaction(null);
           return;
         }
         const norm = status.toLowerCase();
         if (norm === 'sent') setRemoteStatus('sent');
         else if (norm === 'pending') setRemoteStatus('pending');
         else setRemoteStatus('other');
+        setTransaction(tx ?? null);
       } catch (error) {
         if ((error as any)?.name === 'AbortError') return;
         setRemoteStatus('unknown');
+        setTransaction(null);
         toast({
           title: 'Erro ao consultar status',
           description: (error as Error).message,
           variant: 'destructive',
         });
+      } finally {
+        setStatusLoading(false);
       }
     })();
   }, [aggregateId, datacenter, toast]);
@@ -238,6 +249,54 @@ export function StatusUpdateCard() {
           <DatacenterSelector value={datacenter} onChange={setDatacenter} />
 
           <UuidInput value={aggregateId} onChange={setAggregateId} />
+
+          {/* Transaction ID info */}
+          <div className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3 flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Transaction</p>
+              <div className="flex items-center gap-2">
+                {transaction ? (
+                  <>
+                    <span className="font-mono text-sm px-3 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 border border-emerald-200/70 shadow-[0_0_18px_rgba(16,185,129,0.35)]">
+                      {transaction}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-full border border-emerald-200/80 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-800"
+                      onClick={async () => {
+                        if (!transaction) return;
+                        try {
+                          await navigator.clipboard.writeText(transaction);
+                          toast({
+                            title: 'Copiado',
+                            description: 'Transaction copiado para a área de transferência.',
+                          });
+                        } catch (err) {
+                          toast({
+                            title: 'Falha ao copiar',
+                            description: (err as Error).message,
+                            variant: 'destructive',
+                          });
+                        }
+                      }}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </>
+                ) : statusLoading ? (
+                  <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Buscando...
+                  </span>
+                ) : isValid ? (
+                  <span className="text-sm text-muted-foreground">Nenhum transaction_id encontrado</span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Informe um aggregate válido</span>
+                )}
+              </div>
+            </div>
+          </div>
 
           {connectionStatus === 'error' && connectionError && (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">

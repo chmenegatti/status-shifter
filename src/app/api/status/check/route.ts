@@ -29,9 +29,15 @@ export async function POST(request: Request) {
   try {
     const config = await fetchDbConfigFromEtcd(key);
     const pool = getOrCreatePool(key, config);
-    const [rows] = await pool.query("SELECT status FROM outbox WHERE aggregate_id = ? LIMIT 1", [aggregateId]);
-    const status = (rows as Array<{ status?: string }>)[0]?.status ?? null;
-    return NextResponse.json({ status });
+    const [rows] = await pool.query(
+      "SELECT status, transaction FROM outbox WHERE aggregate_id = ? LIMIT 1",
+      [aggregateId]
+    );
+
+    const status = (rows as Array<{ status?: string; transaction?: string }>)[0]?.status ?? null;
+    const transaction = (rows as Array<{ status?: string; transaction?: string }>)[0]?.transaction ?? null;
+
+    return NextResponse.json({ status, transaction });
   } catch (error) {
     console.error("/api/status/check", error);
     return NextResponse.json({ error: (error as Error).message || "Falha ao consultar status" }, { status: 500 });
