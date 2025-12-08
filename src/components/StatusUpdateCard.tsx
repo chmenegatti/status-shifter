@@ -266,7 +266,7 @@ export function StatusUpdateCard() {
               className={cn(
                 "px-3 py-1 rounded-full font-medium text-sm transition-all",
                 remoteStatus === 'pending'
-                  ? "bg-emerald-500/30 text-emerald-700 shadow-glow"
+                  ? "bg-emerald-500/30 text-emerald-500 shadow-[0_0_24px_rgba(16,185,129,0.65)] ring-2 ring-emerald-300/60 border border-emerald-200/70 saturate-150"
                   : "bg-emerald-500/20 text-emerald-600"
               )}
             >
