@@ -6,6 +6,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "StatusHub",
   description: "Gerenciador de status para datacenters",
+  icons: {
+    icon: "/appIcon.ico",
+    shortcut: "/appIcon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
